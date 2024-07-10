@@ -54,5 +54,5 @@
  False,
  [],
  'x86_64',
- None,
+ 'Code Signing Test',
  None)
