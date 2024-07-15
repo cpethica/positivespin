@@ -63,7 +63,7 @@ def button_handler_2(address, *args):
     client.send_message("/card2/", card[2])
 
 
-def button_handler_2(address, *args):
+def button_handler_3(address, *args):
     card = str(vezer_timeline_3)
     print(card[2])
     client.send_message("/card3/", card[2])

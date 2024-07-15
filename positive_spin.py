@@ -1,17 +1,11 @@
-"""Small example OSC server anbd client combined
-This program listens to serveral addresses and print if there is an input.
-It also transmits on a different port at the same time random values to different addresses.
-This can be used to demonstrate concurrent send and recieve over OSC
+"""
+Combined OSC server and client to route messages locally
+Detects machine IP and uses for server address. in/out ports are user defined.
+Monitors specified OSC addresses.
 """
 
-# TO DO!!!!
-#
-# query system for IP then use as default for server below
-#
-#
-
-
 import argparse
+import configparser
 import random
 import time
 import math
@@ -21,55 +15,85 @@ from pythonosc import udp_client
 from pythonosc.dispatcher import Dispatcher
 from pythonosc import osc_server
 
-import socket
+# variables to store incoming timeline values
+timeline_1 = -1
+timeline_2 = -1
+timeline_3 = -1
 
-# variable to store vezer timeline values
-vezer_timeline_1 = -1
-vezer_timeline_2 = -1
-vezer_timeline_3 = -1
+# address to monitor if selected
+parser = argparse.ArgumentParser()
+parser.add_argument("--monitor", type=str, default='/none')
+args = parser.parse_args()
 
-# find machines IP address for use as default for OSC server
-def get_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.settimeout(0)
-    try:
-        # doesn't even have to be reachable
-        s.connect(('10.254.254.254', 1))
-        IP = s.getsockname()[0]
-    except Exception:
-        IP = '127.0.0.1'
-    finally:
-        s.close()
-    return IP
+# get values from config file
+parser = configparser.ConfigParser()
+parser.read('config.ini')
+
+for section_name in parser.sections():
+    print('Section:', section_name)
+    print('  Options:', parser.options(section_name))
+    for name, value in parser.items(section_name):
+        print('  %s = %s' % (name, value))
+print()
+
+serverip = parser['IP_addresses']['main']
+clientip = parser['IP_addresses']['main']
+serverport = parser.getint('OSC_ports', 'in')
+clientport = parser.getint('OSC_ports', 'out')
+
+button_inputs = []   # read all osc button input addresses as list
+for name in parser.options('button_inputs'):
+    button_inputs.append(parser.get('button_inputs', name))
+print(button_inputs[0])
+timeline_inputs = []   # read all osc timeline input addresses as list
+for name in parser.options('timeline_inputs'):
+    timeline_inputs.append(parser.get('timeline_inputs', name))
+
+OSC_outputs = []  # read all osc input addresses as list
+for name in parser.options('OSC_outputs'):
+    OSC_outputs.append(parser.get('OSC_outputs', name))
+
+def button_handler_1(address, *args):
+    print(OSC_outputs[0] + str(timeline_1)[2])
+    # client.send_message(OSC_outputs[0] + str(timeline_1)[2])
 
 
-def button_handler(str, *args):
-    print(vezer_timeline_1)
-    print(vezer_timeline_2)
+def button_handler_2(address, *args):
+    card = str(timeline_2)
+    print(card[2])
+    client.send_message("/card2/")
 
 
-def vezer_handler_1(str, *args):
-    global vezer_timeline_1
-    vezer_timeline_1 = args[0]
+def button_handler_3(address, *args):
+    card = str(timeline_3)
+    print(card[2])
+    client.send_message("/card3/")
 
-def vezer_handler_2(str, *args):
-    global vezer_timeline_2
-    vezer_timeline_2 = args[0]
+
+# update timeline variables from incoming OSC messages
+def timeline_handler_1(address, *args):
+    global timeline_1
+    timeline_1 = args[0]
+
+def timeline_handler_2(address, *args):
+    global timeline_2
+    timeline_2 = args[0]
+
+def timeline_handler_3(address, *args):
+    global timeline_3
+    timeline_3 = args[0]
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--serverip", default=get_ip(), help="The ip to listen on")
-    parser.add_argument("--serverport", type=int, default=9999, help="The port the OSC Server is listening on")
-    parser.add_argument("--clientip", default="127.0.0.1", help="The ip of the OSC server")
-    parser.add_argument("--clientport", type=int, default=8500, help="The port the OSC Client is listening on")
-    args = parser.parse_args()
-
-
     # listen to addresses and print changes in values
     dispatcher = Dispatcher()
-    dispatcher.map("/button1", button_handler)
-    dispatcher.map("/timeline_1", vezer_handler_1)
-    dispatcher.map("/timeline_2", vezer_handler_2)
+    dispatcher.map(args.monitor, print)
+    dispatcher.map(button_inputs[0], button_handler_1)
+    dispatcher.map(button_inputs[1], button_handler_2)
+    dispatcher.map(button_inputs[2], button_handler_3)
+    dispatcher.map(timeline_inputs[0], timeline_handler_1)
+    dispatcher.map(timeline_inputs[1], timeline_handler_2)
+    dispatcher.map(timeline_inputs[2], timeline_handler_3)
 
 def start_server(ip, port):
 
@@ -80,15 +104,11 @@ def start_server(ip, port):
     thread = threading.Thread(target=server.serve_forever)
     thread.start()
 
-# def start_client(ip, port):
-#     print("Starting Client")
-#     client = udp_client.SimpleUDPClient(ip, port)
-#     # print("Sending on {}".format(client.))
-#     thread = threading.Thread(target=random_values(client))
-#     thread.start()
+def start_client(ip, port):
+    global client
+    print("Starting Client")
+    client = udp_client.SimpleUDPClient(ip, port)
 
 
-
-
-start_server(args.serverip, args.serverport)
-# start_client(args.clientip, args.clientport)
+start_server(serverip, serverport)
+start_client(clientip, clientport)
