@@ -1,14 +1,14 @@
 Combined OSC server and client to route messages locally
 
 
-Run:
+Run this first to install dependencies:
 pip install -r 'requirements.txt'
 
-Then:
+Then run script:
 python positive_spin.py
 
 
-Optional OSC monitor:
+To run with optional OSC monitor:
 python positive_spin.py --monitor '/address_to_test'
 
 
