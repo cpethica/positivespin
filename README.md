@@ -1,6 +1,4 @@
 Combined OSC server and client to route messages locally
-Detects machine IP and uses for server address. in/out ports are user defined.
-Monitors specified OSC addresses.
 
 
 Run:
