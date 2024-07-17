@@ -10,6 +10,7 @@ import random
 import time
 import math
 import threading
+from pathlib import Path
 
 from pythonosc import udp_client
 from pythonosc.dispatcher import Dispatcher
@@ -26,8 +27,9 @@ parser.add_argument("--monitor", type=str, default='/none')
 args = parser.parse_args()
 
 # get values from config file
+p = Path(__file__).with_name('config.ini')
 parser = configparser.ConfigParser()
-parser.read('config.ini')
+parser.read(p)
 
 for section_name in parser.sections():
     print('Section:', section_name)
