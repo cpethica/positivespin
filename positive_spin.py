@@ -38,15 +38,14 @@ for section_name in parser.sections():
         print('  %s = %s' % (name, value))
 print()
 
-serverip = parser['IP_addresses']['main']
-clientip = parser['IP_addresses']['main']
+serverip = parser['IP_addresses']['server']
+clientip = parser['IP_addresses']['client']
 serverport = parser.getint('OSC_ports', 'in')
 clientport = parser.getint('OSC_ports', 'out')
 
 button_inputs = []   # read all osc button input addresses as list
 for name in parser.options('button_inputs'):
     button_inputs.append(parser.get('button_inputs', name))
-print(button_inputs[0])
 timeline_inputs = []   # read all osc timeline input addresses as list
 for name in parser.options('timeline_inputs'):
     timeline_inputs.append(parser.get('timeline_inputs', name))
@@ -55,19 +54,22 @@ OSC_outputs = []  # read all osc input addresses as list
 for name in parser.options('OSC_outputs'):
     OSC_outputs.append(parser.get('OSC_outputs', name))
 
-def button_handler_1(address, *args):
-    print(OSC_outputs[0] + str(timeline_1)[2])
-    client.send_message(OSC_outputs[0] + str(timeline_1)[2])
+def button_handler_1(unused_addr, *args):
+    if (timeline_1 != -1):
+        print(OSC_outputs[0] + str(timeline_1)[2])
+        client.send_message(OSC_outputs[0] + str(timeline_1)[2], '')
 
 
 def button_handler_2(address, *args):
-    print(OSC_outputs[1] + str(timeline_2)[2])
-    client.send_message(OSC_outputs[1] + str(timeline_2)[2])
+    if (timeline_2 != -1):
+        print(OSC_outputs[1] + str(timeline_2)[2])
+        client.send_message(OSC_outputs[1] + str(timeline_2)[2], '')
 
 
 def button_handler_3(address, *args):
-    print(OSC_outputs[2] + str(timeline_3)[2])
-    client.send_message(OSC_outputs[2] + str(timeline_3)[2])
+    if (timeline_3 != -1):
+        print(OSC_outputs[2] + str(timeline_3)[2])
+        client.send_message(OSC_outputs[2] + str(timeline_3)[2], '')
 
 
 # update timeline variables from incoming OSC messages
