@@ -57,19 +57,17 @@ for name in parser.options('OSC_outputs'):
 
 def button_handler_1(address, *args):
     print(OSC_outputs[0] + str(timeline_1)[2])
-    # client.send_message(OSC_outputs[0] + str(timeline_1)[2])
+    client.send_message(OSC_outputs[0] + str(timeline_1)[2])
 
 
 def button_handler_2(address, *args):
-    card = str(timeline_2)
-    print(card[2])
-    client.send_message("/card2/")
+    print(OSC_outputs[1] + str(timeline_2)[2])
+    client.send_message(OSC_outputs[1] + str(timeline_2)[2])
 
 
 def button_handler_3(address, *args):
-    card = str(timeline_3)
-    print(card[2])
-    client.send_message("/card3/")
+    print(OSC_outputs[2] + str(timeline_3)[2])
+    client.send_message(OSC_outputs[2] + str(timeline_3)[2])
 
 
 # update timeline variables from incoming OSC messages
