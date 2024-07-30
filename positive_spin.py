@@ -58,19 +58,22 @@ def button_handler_1(unused_addr, *args):
     if (timeline_1 != -1):
         print(OSC_outputs[0] + str(timeline_1)[2])
         client.send_message(OSC_outputs[0] + str(timeline_1)[2], '')
-
+    else:
+        print("No OSC "+OSC_outputs[0]+" timeline data received")
 
 def button_handler_2(address, *args):
     if (timeline_2 != -1):
         print(OSC_outputs[1] + str(timeline_2)[2])
         client.send_message(OSC_outputs[1] + str(timeline_2)[2], '')
-
+    else:
+        print("No OSC "+OSC_outputs[1]+" timeline data received")
 
 def button_handler_3(address, *args):
     if (timeline_3 != -1):
         print(OSC_outputs[2] + str(timeline_3)[2])
         client.send_message(OSC_outputs[2] + str(timeline_3)[2], '')
-
+    else:
+        print("No OSC "+OSC_outputs[2]+" timeline data received")
 
 # update timeline variables from incoming OSC messages
 def timeline_handler_1(address, *args):
