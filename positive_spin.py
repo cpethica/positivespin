@@ -43,6 +43,7 @@ for section_name in parser.sections():
         print('  %s = %s' % (name, value))
 print()
 
+# IP's and Ports
 serverip = parser['IP_addresses']['server']
 clientip = parser['IP_addresses']['client']
 timelineport = parser.getint('OSC_ports', 'timeline')
@@ -59,6 +60,9 @@ for name in parser.options('timeline_inputs'):
 OSC_outputs = []  # read all osc input addresses as list
 for name in parser.options('OSC_outputs'):
     OSC_outputs.append(parser.get('OSC_outputs', name))
+
+# timers and delays
+win_delay = parser.getint('delays', 'win_delay')
 
 # print some basic info then trigger other functions for drum slowdown, osc etc
 def button_handler_1(unused_addr, *args):
@@ -124,36 +128,30 @@ def start_client(ip, port):
 
 # Drum Functions:
 
+reading = [-1,-1,-1]
 # take time from button handler functions and use to send osc and set acceleration
 def drum_1(press):
     client.send_message(OSC_outputs[0] + str(press)[2], '')
     global drum_flag_1
     drum_flag_1 = True      # set flag so we can work out when all buttons have been pressed
+    reading[0] = int(str(press)[2])   # record card reading in array for when they've all been presses
 
 def drum_2(press):
     client.send_message(OSC_outputs[1] + str(press)[2], '')
     global drum_flag_2
     drum_flag_2 = True      # set flag so we can work out when all buttons have been pressed
+    reading[1] = int(str(press)[2])
 
 def drum_3(press):
     client.send_message(OSC_outputs[2] + str(press)[2], '')
     global drum_flag_3
     drum_flag_3 = True      # set flag so we can work out when all buttons have been pressed
-
+    reading[2] = int(str(press)[2])
 
 # sets drum speeds from parameters in config file and time of button press
 def drum_speed(drumber, time):
     pass
 
-# do something when all buttons have been pressed
-def winner():
-    global drum_flag_1, drum_flag_2, drum_flag_3
-    while drum_flag_1 and drum_flag_2 and drum_flag_3:
-        print("winner!!!!")
-        # reset flags
-        drum_flag_1 = False
-        drum_flag_2 = False
-        drum_flag_3 = False
 
 # start server for timeline input
 start_server(serverip, timelineport)
@@ -162,6 +160,26 @@ start_server(serverip, buttonport)
 # start osc output client
 start_client(clientip, clientport)
 
+# reset flags
+def reset_flags():
+    global drum_flag_1
+    drum_flag_1 = False
+    global drum_flag_2
+    drum_flag_2 = False
+    global drum_flag_3
+    drum_flag_3 = False
+
 # run game
 while True:
-    winner()
+    while drum_flag_1 and drum_flag_2 and drum_flag_3:
+        print("winner!!!!")
+        # for now just sum all readings and send osc
+        print(sum(reading))
+        client.send_message(OSC_outputs[3] + str(sum(reading)), '')
+        # reset flags
+        reset_flags()
+        # sleep for a bit
+        time.sleep(win_delay)
+        # reset arduino buttons and madmapper
+        client.send_message(OSC_outputs[4], '')
+
