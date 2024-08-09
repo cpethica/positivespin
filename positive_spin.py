@@ -63,6 +63,11 @@ for name in parser.options('OSC_outputs'):
 
 # timers and delays
 win_delay = parser.getint('delays', 'win_delay')
+acceleration = parser.getfloat('drum_speed', 'acceleration')
+deceleration = parser.getfloat('drum_speed', 'deceleration')
+lag = parser.getint('drum_speed', 'lag')
+fade = parser.getint('drum_speed', 'fade')
+fps = parser.getint('drum_speed', 'fps')
 
 # print some basic info then trigger other functions for drum slowdown, osc etc
 def button_handler_1(unused_addr, *args):
@@ -149,7 +154,7 @@ def drum_3(press):
     reading[2] = int(str(press)[2])
 
 # sets drum speeds from parameters in config file and time of button press
-def drum_speed(drumber, time):
+def drum_speed(drum_number, time):
     pass
 
 
@@ -170,7 +175,13 @@ def reset_flags():
     drum_flag_3 = False
 
 # run game
+startup = 0     # startup flag (triggers drum speed up)
 while True:
+    if startup == 0:
+        for i in range(lag*fps):
+            client.send_message(OSC_outputs[5], i/(lag*fps-1))  # send float value (0-1) for drum speed
+            time.sleep(1/fps)    # sleep for 1 frame
+        startup = 1
     while drum_flag_1 and drum_flag_2 and drum_flag_3:
         print("winner!!!!")
         # for now just sum all readings and send osc
@@ -180,6 +191,8 @@ while True:
         reset_flags()
         # sleep for a bit
         time.sleep(win_delay)
-        # reset arduino buttons and madmapper
+        # reset arduino buttons and madmapper with OSC message and start again
         client.send_message(OSC_outputs[4], '')
+        startup = 0
+
 
