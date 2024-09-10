@@ -71,25 +71,22 @@ fps = parser.getint('drum_speed', 'fps')
 
 # print some basic info then trigger other functions for drum slowdown, osc etc
 def button_handler_1(unused_addr, *args):
-    if (timeline_1 != -1):
+    if timeline_1 != -1 and drum_flag_1 == False:
         drum_1(timeline_1)  # send timeline data to function to handle osc etc
         print(OSC_outputs[0] + str(timeline_1)) # prints address to send to and timeline value when pressed
-    else:
-        print("No OSC "+OSC_outputs[0]+" timeline data received")
+
 
 def button_handler_2(address, *args):
-    if (timeline_2 != -1):
+    if timeline_2 != -1 and drum_flag_2 == False:
         print(OSC_outputs[1] + str(timeline_2))
         drum_2(timeline_2)  # send timeline data to function to handle osc etc
-    else:
-        print("No OSC "+OSC_outputs[1]+" timeline data received")
+
 
 def button_handler_3(address, *args):
-    if (timeline_3 != -1):
+    if timeline_3 != -1 and drum_flag_3 == False:
         print(OSC_outputs[2] + str(timeline_3))
         drum_3(timeline_3)  # send timeline data to function to handle osc etc
-    else:
-        print("No OSC "+OSC_outputs[2]+" timeline data received")
+
 
 # update timeline variables from incoming OSC messages
 def timeline_handler_1(address, *args):
@@ -103,7 +100,6 @@ def timeline_handler_2(address, *args):
 def timeline_handler_3(address, *args):
     global timeline_3
     timeline_3 = args[0]
-
 
 
 if __name__ == "__main__":
@@ -187,12 +183,12 @@ while True:
         # for now just sum all readings and send osc
         print(sum(reading))
         client.send_message(OSC_outputs[3] + str(sum(reading)), '')
-        # reset flags
-        reset_flags()
         # sleep for a bit
         time.sleep(win_delay)
         # reset arduino buttons and madmapper with OSC message and start again
         client.send_message(OSC_outputs[4], '')
+        # reset flags
+        reset_flags()
         startup = 0
 
 
