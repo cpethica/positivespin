@@ -15,16 +15,23 @@ from pathlib import Path
 from pythonosc import udp_client
 from pythonosc.dispatcher import Dispatcher
 from pythonosc import osc_server
+from threading import Thread
 
 # variables to store incoming timeline values
 timeline_1 = -1
 timeline_2 = -1
 timeline_3 = -1
 
-# button pressed flags
-drum_flag_1 = False
+# function flags
+drum_flag_1 = False    # have buttons been pressed flags
 drum_flag_2 = False
 drum_flag_3 = False
+
+drum_1_stop = True    # drum has slowed down fully after button press
+drum_2_stop = True    # drum has slowed down fully after button press
+drum_3_stop = True    # drum has slowed down fully after button press
+
+startup = 0     # startup flag - game started (triggers drum speed up)
 
 # address to monitor if selected
 parser = argparse.ArgumentParser()
@@ -161,7 +168,7 @@ start_server(serverip, buttonport)
 # start osc output client
 start_client(clientip, clientport)
 
-# reset flags
+# reset drum flags
 def reset_flags():
     global drum_flag_1
     drum_flag_1 = False
@@ -169,16 +176,63 @@ def reset_flags():
     drum_flag_2 = False
     global drum_flag_3
     drum_flag_3 = False
+    global drum_1_stop
+    drum_1_stop = True
+    global drum_2_stop
+    drum_2_stop = True
+    global drum_3_stop
+    drum_3_stop = True
+
+# functions to slow drums after buttons have been pressed
+def drum_1_slow():
+    i = 1
+    while i > 0:
+        client.send_message(OSC_outputs[5], i)  # send float value (0-1) for drum speed
+        i = i - (1/(lag * fps))
+        time.sleep(1/fps)
+
+
+def drum_2_slow():
+    i = 1
+    while i > 0:
+        client.send_message(OSC_outputs[6], i)  # send float value (0-1) for drum speed
+        i = i - (1/(lag * fps))
+        time.sleep(1/fps)
+
+def drum_3_slow():
+    i = 1
+    while i > 0:
+        client.send_message(OSC_outputs[7], i)  # send float value (0-1) for drum speed
+        i = i - (1/(lag * fps))
+        time.sleep(1/fps)
 
 # run game
-startup = 0     # startup flag (triggers drum speed up)
 while True:
+    # do slow start for drums
     if startup == 0:
         for i in range(lag*fps):
             client.send_message(OSC_outputs[5], i/(lag*fps-1))  # send float value (0-1) for drum speed
             time.sleep(1/fps)    # sleep for 1 frame
         startup = 1
+    # slow down drums as the buttons are pressed - need to remove sleep here so other button presses are registered during slow down
+    # start slowdown threads for drums
+    thread1 = Thread(target=drum_1_slow)
+    thread2 = Thread(target=drum_2_slow)
+    thread3 = Thread(target=drum_3_slow)
+    if drum_flag_1 and drum_1_stop:
+        thread1.start()
+        drum_1_stop = False         # stop thread starting repeatedly
+    if drum_flag_2 and drum_2_stop:
+        thread2.start()
+        drum_2_stop = False
+    if drum_flag_3 and drum_3_stop:
+        thread3.start()
+        drum_3_stop = False
+
+    # check to see if all buttons have been pressed - and all drums have finished slowing down...
     while drum_flag_1 and drum_flag_2 and drum_flag_3:
+        # wait for last drum to finish spinning
+        time.sleep(lag)
         print("winner!!!!")
         # for now just sum all readings and send osc
         print(sum(reading))
