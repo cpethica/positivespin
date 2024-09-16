@@ -38,3 +38,8 @@ while True:
         print("You pressed '3'.")
         client.send_message(button_inputs[2], '')
         time.sleep(0.1)
+    if keyboard.is_pressed("4"):
+        print("You pressed '3'.")
+        client.send_message(button_inputs[2], '')
+        time.sleep(0.1)
+

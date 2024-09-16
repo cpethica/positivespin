@@ -212,6 +212,8 @@ while True:
     if startup == 0:
         for i in range(lag*fps):
             client.send_message(OSC_outputs[5], i/(lag*fps-1))  # send float value (0-1) for drum speed
+            client.send_message(OSC_outputs[6], i / (lag * fps - 1))  # send float value (0-1) for drum speed
+            client.send_message(OSC_outputs[7], i / (lag * fps - 1))  # send float value (0-1) for drum speed
             time.sleep(1/fps)    # sleep for 1 frame
         startup = 1
     # slow down drums as the buttons are pressed - need to remove sleep here so other button presses are registered during slow down
