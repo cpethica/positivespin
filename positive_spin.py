@@ -22,6 +22,9 @@ timeline_1 = -1
 timeline_2 = -1
 timeline_3 = -1
 
+# store card values from pressed buttons to determine reading later
+reading = [-1,-1,-1]
+
 # function flags
 drum_flag_1 = False    # have buttons been pressed flags
 drum_flag_2 = False
@@ -78,21 +81,22 @@ fps = parser.getint('drum_speed', 'fps')
 
 # print some basic info then trigger other functions for drum slowdown, osc etc
 def button_handler_1(unused_addr, *args):
+    global drum_flag_1
     if timeline_1 != -1 and drum_flag_1 == False:
-        drum_1(timeline_1)  # send timeline data to function to handle osc etc
-        print(OSC_outputs[0] + str(timeline_1)) # prints address to send to and timeline value when pressed
-
+        drum_flag_1 = True  # set flag so we can work out when all buttons have been pressed
+        reading[0] = int(str(timeline_1)[2])  # record card reading in array for when they've all been presses
 
 def button_handler_2(address, *args):
+    global drum_flag_2
     if timeline_2 != -1 and drum_flag_2 == False:
-        print(OSC_outputs[1] + str(timeline_2))
-        drum_2(timeline_2)  # send timeline data to function to handle osc etc
-
+        drum_flag_2 = True  # set flag so we can work out when all buttons have been pressed
+        reading[1] = int(str(timeline_2)[2])  # record card reading in array for when they've all been presses
 
 def button_handler_3(address, *args):
+    global drum_flag_3
     if timeline_3 != -1 and drum_flag_3 == False:
-        print(OSC_outputs[2] + str(timeline_3))
-        drum_3(timeline_3)  # send timeline data to function to handle osc etc
+        drum_flag_3 = True  # set flag so we can work out when all buttons have been pressed
+        reading[2] = int(str(timeline_3)[2])  # record card reading in array for when they've all been presses
 
 
 # update timeline variables from incoming OSC messages
@@ -134,33 +138,6 @@ def start_client(ip, port):
     print("Starting Client")
     client = udp_client.SimpleUDPClient(ip, port)
 
-# Drum Functions:
-
-reading = [-1,-1,-1]
-# take time from button handler functions and use to send osc and set acceleration
-def drum_1(press):
-    client.send_message(OSC_outputs[0] + str(press)[2], '')
-    global drum_flag_1
-    drum_flag_1 = True      # set flag so we can work out when all buttons have been pressed
-    reading[0] = int(str(press)[2])   # record card reading in array for when they've all been presses
-
-def drum_2(press):
-    client.send_message(OSC_outputs[1] + str(press)[2], '')
-    global drum_flag_2
-    drum_flag_2 = True      # set flag so we can work out when all buttons have been pressed
-    reading[1] = int(str(press)[2])
-
-def drum_3(press):
-    client.send_message(OSC_outputs[2] + str(press)[2], '')
-    global drum_flag_3
-    drum_flag_3 = True      # set flag so we can work out when all buttons have been pressed
-    reading[2] = int(str(press)[2])
-
-# sets drum speeds from parameters in config file and time of button press
-def drum_speed(drum_number, time):
-    pass
-
-
 # start server for timeline input
 start_server(serverip, timelineport)
 # start server for button input
@@ -190,7 +167,7 @@ def drum_1_slow():
         client.send_message(OSC_outputs[5], i)  # send float value (0-1) for drum speed
         i = i - (1/(lag * fps))
         time.sleep(1/fps)
-
+    client.send_message(OSC_outputs[0] + str(reading[0]), '')        # send 3rd value of timeline string (bit after decimal point) as card value - after slowdown has finished
 
 def drum_2_slow():
     i = 1
@@ -198,6 +175,7 @@ def drum_2_slow():
         client.send_message(OSC_outputs[6], i)  # send float value (0-1) for drum speed
         i = i - (1/(lag * fps))
         time.sleep(1/fps)
+    client.send_message(OSC_outputs[1] + str(reading[1]), '')
 
 def drum_3_slow():
     i = 1
@@ -205,11 +183,13 @@ def drum_3_slow():
         client.send_message(OSC_outputs[7], i)  # send float value (0-1) for drum speed
         i = i - (1/(lag * fps))
         time.sleep(1/fps)
+    client.send_message(OSC_outputs[2] + str(reading[2]), '')
 
 # run game
 while True:
     # do slow start for drums
     if startup == 0:
+        client.send_message(OSC_outputs[8], '')     # send play message to madmapper
         for i in range(lag*fps):
             client.send_message(OSC_outputs[5], i/(lag*fps-1))  # send float value (0-1) for drum speed
             client.send_message(OSC_outputs[6], i / (lag * fps - 1))  # send float value (0-1) for drum speed
@@ -242,9 +222,8 @@ while True:
         # sleep for a bit
         time.sleep(win_delay)
         # reset arduino buttons and madmapper with OSC message and start again
-        client.send_message(OSC_outputs[4], '')
+        # client.send_message(OSC_outputs[4], '')
         # reset flags
         reset_flags()
         startup = 0
-
 
