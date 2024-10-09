@@ -151,20 +151,29 @@ while True:
     # check to see if all buttons have been pressed
     while drum_flag_1 and drum_flag_2 and drum_flag_3:
         print("winner!!!!")
-        # check for jackpot
+        # check for jackpot - probability = 1/25 (5 ways to do this out of 125 possible outcomes)
         if reading[0] == reading[1] == reading [2]:
             print("Jackpot!")
             print(reading)
-        # check for a pair
+            client.send_message(OSC_outputs[3] + 'jackpot', reading[0])    # send OSC message /jackpot and integer for winning number
+        # check for a pair - probability 8/25)
         elif reading[0] == reading[1] or reading[1] == reading[2] or reading[0] == reading[2]:
             print("Pair!")
             print(reading)
-
-        #client.send_message(OSC_outputs[3] + str(sum(reading)), '')
+            # work out which cards are the same for osc output
+            if reading[0] == reading[1]:
+                card = reading[0]
+            else:
+                card = reading[2]
+            client.send_message(OSC_outputs[3] + 'pair', card)
+        else:
+            print("Nothing!")
+            print(reading)
+            client.send_message(OSC_outputs[3] + 'nothing', '')
         # sleep for a bit
-        #time.sleep(3)
+        time.sleep(win_delay)
         # reset arduino buttons and madmapper with OSC message and start again
-        # client.send_message(OSC_outputs[4], '')
+        client.send_message(OSC_outputs[4], '')
         # reset flags
         reset_flags()
 
