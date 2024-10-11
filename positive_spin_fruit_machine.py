@@ -141,12 +141,15 @@ while True:
     if drum_flag_1 and sent_1:
         client.send_message(OSC_outputs[0] + str(reading[0]), '')             # do something when button is pressed
         sent_1 = False
+        time.sleep(0.1)
     if drum_flag_2 and sent_2:
         client.send_message(OSC_outputs[1] + str(reading[1]), '')
         sent_2 = False
+        time.sleep(0.1)
     if drum_flag_3 and sent_3:
         client.send_message(OSC_outputs[2] + str(reading[2]), '')
         sent_3 = False
+        time.sleep(0.1)
 
     # check to see if all buttons have been pressed
     while drum_flag_1 and drum_flag_2 and drum_flag_3:
@@ -155,7 +158,7 @@ while True:
         if reading[0] == reading[1] == reading [2]:
             print("Jackpot!")
             print(reading)
-            client.send_message(OSC_outputs[3] + 'jackpot', reading[0])    # send OSC message /jackpot and integer for winning number
+            client.send_message(OSC_outputs[3] + 'jackpot/' + str(reading[0]), '')    # send OSC message /jackpot and integer for winning number
         # check for a pair - probability 8/25)
         elif reading[0] == reading[1] or reading[1] == reading[2] or reading[0] == reading[2]:
             print("Pair!")
@@ -165,7 +168,7 @@ while True:
                 card = reading[0]
             else:
                 card = reading[2]
-            client.send_message(OSC_outputs[3] + 'pair', card)
+            client.send_message(OSC_outputs[3] + 'pair/' + str(card), '')
         else:
             print("Nothing!")
             print(reading)
