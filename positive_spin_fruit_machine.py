@@ -73,6 +73,7 @@ for name in parser.options('OSC_outputs'):
 
 # timers and delays
 win_delay = parser.getint('delays', 'win_delay')
+reset_delay = parser.getint('delays', 'reset_delay')
 
 # button handlers - when pressed these set flags and assign (randomly...) the card reading for each reel (5 cards per reel)
 def button_handler_1(unused_addr, *args):
@@ -80,18 +81,21 @@ def button_handler_1(unused_addr, *args):
     if drum_flag_1 == False:
         drum_flag_1 = True  # set flag so we can work out when all buttons have been pressed
         reading[0] = random.randint(1, 5)  # reading is a random number between 1 and 5
+        client.send_message(OSC_outputs[0] + str(reading[0]), '')
 
 def button_handler_2(address, *args):
     global drum_flag_2
     if drum_flag_2 == False:
         drum_flag_2 = True  # set flag so we can work out when all buttons have been pressed
         reading[1] = random.randint(1, 5)  # reading is a random number between 1 and 5
+        client.send_message(OSC_outputs[1] + str(reading[1]), '')
 
 def button_handler_3(address, *args):
     global drum_flag_3
     if drum_flag_3 == False:
         drum_flag_3 = True  # set flag so we can work out when all buttons have been pressed
         reading[2] = random.randint(1, 5)  # reading is a random number between 1 and 5
+        client.send_message(OSC_outputs[2] + str(reading[2]), '')
 
 
 if __name__ == "__main__":
@@ -138,22 +142,10 @@ def reset_flags():
 
 # run game
 while True:
-    if drum_flag_1 and sent_1:
-        client.send_message(OSC_outputs[0] + str(reading[0]), '')             # do something when button is pressed
-        sent_1 = False
-        time.sleep(0.1)
-    if drum_flag_2 and sent_2:
-        client.send_message(OSC_outputs[1] + str(reading[1]), '')
-        sent_2 = False
-        time.sleep(0.1)
-    if drum_flag_3 and sent_3:
-        client.send_message(OSC_outputs[2] + str(reading[2]), '')
-        sent_3 = False
-        time.sleep(0.1)
-
     # check to see if all buttons have been pressed
     while drum_flag_1 and drum_flag_2 and drum_flag_3:
-        print("winner!!!!")
+        # sleep for a bit after final button press
+        time.sleep(win_delay)
         # check for jackpot - probability = 1/25 (5 ways to do this out of 125 possible outcomes)
         if reading[0] == reading[1] == reading [2]:
             print("Jackpot!")
@@ -173,8 +165,8 @@ while True:
             print("Nothing!")
             print(reading)
             client.send_message(OSC_outputs[3] + 'nothing', '')
-        # sleep for a bit
-        time.sleep(win_delay)
+        # sleep for a bit before reset
+        time.sleep(reset_delay)
         # reset arduino buttons and madmapper with OSC message and start again
         client.send_message(OSC_outputs[4], '')
         # reset flags
