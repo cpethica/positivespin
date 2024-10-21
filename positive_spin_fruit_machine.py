@@ -74,6 +74,7 @@ for name in parser.options('OSC_outputs'):
 # timers and delays
 win_delay = parser.getint('delays', 'win_delay')
 reset_delay = parser.getint('delays', 'reset_delay')
+jackpot_delay = parser.getint('delays', 'jackpot_delay')
 
 # button handlers - when pressed these set flags and assign (randomly...) the card reading for each reel (5 cards per reel)
 def button_handler_1(unused_addr, *args):
@@ -151,6 +152,8 @@ while True:
             print("Jackpot!")
             print(reading)
             client.send_message(OSC_outputs[3] + 'jackpot/' + str(reading[0]), '')    # send OSC message /jackpot and integer for winning number
+            # sleep before reset
+            time.sleep(jackpot_delay)
         # check for a pair - probability 8/25)
         elif reading[0] == reading[1] or reading[1] == reading[2] or reading[0] == reading[2]:
             print("Pair!")
@@ -161,14 +164,17 @@ while True:
             else:
                 card = reading[2]
             client.send_message(OSC_outputs[3] + 'pair/' + str(card), '')
+            # sleep before reset
+            time.sleep(reset_delay)
         else:
             print("Nothing!")
             print(reading)
             client.send_message(OSC_outputs[3] + 'nothing', '')
-        # sleep for a bit before reset
-        time.sleep(reset_delay)
+            # sleep before reset
+            time.sleep(reset_delay)
         # reset arduino buttons and madmapper with OSC message and start again
         client.send_message(OSC_outputs[4], '')
+        print("reset")
         # reset flags
         reset_flags()
 
